@@ -3,7 +3,7 @@ import useAuthContext from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 
 const Navigacio = () => {
-    const { user, navigation, getNavItems } = useAuthContext(); // getNavItems lekérése az AuthContextből
+  const { user, navigation, getNavItems, logout } = useAuthContext(); // getNavItems lekérése az AuthContextből
 
   useEffect(() => {
     getNavItems();
@@ -17,8 +17,8 @@ const Navigacio = () => {
             // Ha van navigációs adat, azt dinamikusan rendereljük
             navigation.map((item) => (
               <li className="navbar-item" key={item.id}>
-                <Link className="nav-link" to={item.url}>
-                  {item.nav_name}
+                <Link className="nav-link" to={item.url} key={item.id}>
+                  {item.megnevezes}
                 </Link>
               </li>
             ))
@@ -28,6 +28,19 @@ const Navigacio = () => {
               <span className="nav-link">Loading...</span>
             </li>
           )}
+
+          {/* // {navigation.map((e) => {
+          //   <li className="navbar-item" key={e.id}>
+          //     <button
+          //       className="nav-link"
+          //       onClick={() => {
+          //         logout();
+          //       }}
+          //     >
+          //       Kijelentkezés
+          //     </button>
+          //   </li>;
+          // })} */}
         </ul>
       </div>
     </nav>

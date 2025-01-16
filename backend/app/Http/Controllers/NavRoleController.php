@@ -54,15 +54,15 @@ class NavRoleController extends Controller
     {
         // Ellenőrizzük, hogy van-e bejelentkezett felhasználó
         $roleId = Auth::check() ? Auth::user()->role_id : 4; // Ha nincs bejelentkezett felhasználó, akkor vendég szerepkör (role_id = 4)
-
+        
         // Lekérjük a menüpontokat a megadott szerepkörhöz
         $navItems = DB::table('nav_roles')
             ->join('navs', 'navs.id', '=', 'nav_roles.nav_id')
             ->where('nav_roles.role_id', $roleId)
             ->orderBy('nav_roles.sorszam')
-            ->select('navs.megnevezes as nav_name', 'navs.url','componentName')
+            ->select('navs.megnevezes', 'navs.url', 'componentName')
             ->get();
 
-        return response()->json($navItems); // Visszaadjuk JSON formátumban
+        return response()->json($navItems)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 }

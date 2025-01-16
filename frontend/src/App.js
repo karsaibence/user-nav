@@ -17,6 +17,7 @@ function App() {
     return e.url.replace("/", "");
   });
 
+  console.log(navigation)
   return (
     <Routes>
       <Route path="/" element={<VendegLayout />}>

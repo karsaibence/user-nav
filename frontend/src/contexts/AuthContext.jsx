@@ -14,26 +14,48 @@ export const AuthProvider = ({ children }) => {
     password: "",
     password_confirmation: "",
   });
+
   const csrf = () => myAxios.get("/sanctum/csrf-cookie");
 
   //bejelentkezett felhasználó adatainak lekérdezése
   const getUser = async () => {
-    const { data } = await myAxios.get("/api/user");
+    const { data } = await myAxios.get("/user");
     console.log(data);
     setUser(data);
   };
+
   const logout = async () => {
-    await csrf();
+    try {
+      await csrf(); // CSRF cookie lekérése
 
-    myAxios.post("/logout").then((resp) => {
+      // Kijelentkezés az API-ból
+      await myAxios.post("/logout");
+
+      // Felhasználó törlése és navigációs lista frissítése
       setUser(null);
-      console.log(resp);
-    });
-  };
+      setNavigation([]);
+      navigate("/");
+      // Cookie-k törlése
+      document.cookie = "XSRF-TOKEN=; Path=/; Max-Age=0";
+      document.cookie = "sanctum=; Max-Age=0";
 
+      // Navigációs adat frissítése
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   const getNavItems = async () => {
-    const { data } = await myAxios.get("/api/nav-items"); // Az API végpont, ahol a navigációs elemeket lekérjük
-    setNavigation(data); // Az adatokat beállítjuk a navigation állapotba
+    // const { data } = await myAxios.get("/nav-items"); // Az API végpont, ahol a navigációs elemeket lekérjük
+    // setNavigation(data); // Az adatokat beállítjuk a navigation állapotba
+
+    try {
+      const { data } = await myAxios.get(
+        `/nav-items?timestamp=${new Date().getTime()}`
+      ); // Az új végpont, amely a felhasználó szerepe alapján adja vissza a menüpontokat
+      setNavigation(data); // Az adatokat beállítjuk a navigation állapotba
+    } catch (error) {
+      console.error("Failed to fetch navigation items", error);
+    }
   };
 
   const loginReg = async ({ ...adat }, vegpont) => {
@@ -49,6 +71,7 @@ export const AuthProvider = ({ children }) => {
       //await getUser();
       //elmegyünk  a kezdőlapra
       getUser();
+      getNavItems();
       navigate("/");
     } catch (error) {
       console.log(error);
@@ -60,7 +83,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ logout, loginReg, errors, getUser, user, getNavItems, navigation }}
+      value={{
+        logout,
+        loginReg,
+        errors,
+        getUser,
+        user,
+        getNavItems,
+        navigation,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -111,13 +111,6 @@ const Regisztracio = () => {
             placeholder="jelszó újra"
             name="pwdcmn"
           />
-          <div>
-            {errors.password && (
-              <span className="text-danger">
-                {errors.password_confirmation[0]}
-              </span>
-            )}
-          </div>
         </div>
 
         <div className=" text-center">

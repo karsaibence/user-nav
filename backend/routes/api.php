@@ -15,19 +15,26 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['message' => 'CSRF token set'])->withCookie(cookie('XSRF-TOKEN', csrf_token()));
+});
+
+
+Route::middleware('auth:sanctum')->post('/logout', [AuthenticatedSessionController::class, 'destroy']);
+
 Route::middleware(['auth:sanctum', AdminRole::class])
     ->group(function () {
-        Route::get('/admin/users', [UserController::class, 'index']);
+        //Route::get('/admin/users', [UserController::class, 'index']);
     });
 
 Route::middleware(['auth:sanctum', OrvosRole::class])
     ->group(function () {
-        Route::get('/admin/users', [UserController::class, 'index']);
+        //Route::get('/admin/users', [UserController::class, 'index']);
     });
 
 Route::middleware(['auth:sanctum', PaciensRole::class])
     ->group(function () {
-        Route::get('/admin/users', [UserController::class, 'index']);
+        //Route::get('/admin/users', [UserController::class, 'index']);
     });
 
 

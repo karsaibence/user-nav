@@ -34,36 +34,10 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
-    /*public function destroy(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logout successful']);
-    }*/
+    
     public function destroy(Request $request)
     {
-        /*
-        // A felhasználó autentikálása, hogy tudjuk, melyik tokent töröljük
-        $user = Auth::user();
-
-        // Ha léteznek személyes hozzáférési tokenek, töröljük őket
-        if ($user) {
-            // Az összes személyes hozzáférési tokent töröljük
-            $user->tokens->each(function ($token) {
-                $token->delete(); // Töröljük a megfelelő tokeneket
-            });
-            Cookie::forget('XSRF-TOKEN');
-            Cookie::forget('sanctum');
-        }
-
-
-        // Válasz visszaküldése
-        return response()->json(['message' => 'Successfully logged out']);
-        */
-
-        // Törli az összes token-t, amivel a felhasználó be van jelentkezve
+        
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

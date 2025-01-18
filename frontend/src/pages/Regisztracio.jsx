@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import useAuthContext from "../contexts/AuthContext";
 
 const Regisztracio = () => {
@@ -8,7 +7,6 @@ const Regisztracio = () => {
   const [password, setPassword] = useState("");
   const [password_confirmation, setPassword_confirmation] = useState("");
 
-  const navigate = useNavigate();
   const { loginReg, errors } = useAuthContext();
 
   const handleSubmit = async (e) => {

@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\NavController;
 use App\Http\Controllers\NavRoleController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\role_nav_viewController;
+use App\Http\Controllers\RoleController;
 use App\Http\Middleware\AdminRole;
 use App\Http\Middleware\LoadNavigation;
 use App\Http\Middleware\OrvosRole;
@@ -25,6 +27,10 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthenticatedSessionControll
 Route::middleware(['auth:sanctum', AdminRole::class])
     ->group(function () {
         //Route::get('/admin/users', [UserController::class, 'index']);
+        Route::get('/get-roles-nav',[role_nav_viewController::class,'index']);
+        Route::get('/roles',[RoleController::class,'index']);
+        Route::post('/update-nav', [NavRoleController::class, 'updateNavOrder']);
+        Route::get('/get-nav-items-with-roles', [NavRoleController::class, 'getNavItemsWithRoles']);
     });
 
 Route::middleware(['auth:sanctum', OrvosRole::class])

@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@hello-pangea/dnd": "^17.0.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "cra-template": "1.2.0",
     "react": "^19.0.0",
+    "react-beautiful-dnd": "^11.0.5",
     "react-bootstrap": "^2.10.7",
     "react-dom": "^19.0.0",
     "react-scripts": "5.0.1"

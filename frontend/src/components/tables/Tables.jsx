@@ -1,139 +1,82 @@
-import { Table } from 'react-bootstrap';
-import TableRow from './TableRow';
-import { useEffect, useState } from 'react';
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
-import { myAxios } from '../../api/Axios';
-import useAuthContext from '../../contexts/AuthContext';
+import { Table } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { myAxios } from "../../api/Axios";
+import TableRow from "./TableRow";
+import "./roletables.css"
 
+const Tables = (props) => {
+  const [items, setItems] = useState(props.lista); // Kezdetben üres tömb
 
-const Tables = ( props ) => {
-    const [ items, setItems ] = useState( [] ); // Kezdetben üres tömb
+  useEffect(() => {
+    setItems(props.lista); // Frissítjük a state-et, amikor a lista változik
+  }, [props.lista]);
 
-    useEffect( () => {
-        const fetchData = async () => {
-            try {
-                const response = await myAxios.get( '/get-nav-items-with-roles' );
-                if ( response.data ) {
-                    setItems( response.data );  // API válaszának beállítása
-                } else {
-                    console.log( 'No data returned from API' );
-                }
-            } catch ( error ) {
-                console.error( 'Error fetching nav items:', error );
-            }
-        };
+  const onDragEnd = async (result) => {
+    const { destination, source } = result;
 
-        fetchData();
-    }, [] );
+    // Ha nincs érvényes cél, ne csinálj semmit
+    if (!destination) return;
 
-    const onDragEnd = async ( result ) => {
-        const { destination, source } = result;
+    const reorderedItems = Array.from(props.lista); // Átrendezzük az elemeket
+    const [removed] = reorderedItems.splice(source.index, 1); // Kivesszük az elemet
+    reorderedItems.splice(destination.index, 0, removed); // Beszúrjuk az új helyre
 
-        // Ha a cél pozíció érvényes, átrendezzük a sorokat
-        if ( !destination ) return;
+    // Frissítjük az elemeket a state-ben
+    setItems(reorderedItems);
 
-        const reorderedItems = Array.from( items );
-        const [ removed ] = reorderedItems.splice( source.index, 1 ); // Kivesszük a forrást
-        reorderedItems.splice( destination.index, 0, removed ); // Beszúrjuk a célt
+    // Az új sorrendet globálisan is frissítjük
+    props.onUpdateNavOrder(props.nev, reorderedItems); // Továbbítjuk a frissített sorrendet a szülőnek
 
-        // Frissítjük a state-et
-        setItems( reorderedItems );
+    // Küldjük el az új sorrendet a backendnek
+    try {
+      const response = await myAxios.put("/update-nav", {
+        items: reorderedItems,
+      });
+      console.log("Updated order (response):", response.data);
+    } catch (error) {
+      console.error("Error updating order:", error);
+    }
+  };
 
-        console.log( 'Items:', items );
-        console.log( 'Reordered items:', reorderedItems );
+  console.log(items);
+  return (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="droppable">
+        {(provided) => (
+          <Table
+            className="table"
+            striped
+            bordered
+            hover
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+          >
+            <thead>
+              <tr>
+                <th colSpan={2}>{props.nev}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((e, i) => {
+                if (e.role_name === props.nev)
+                  return (
+                    <Draggable key={e.id} draggableId={String(e.id)} index={i}>
+                      {(provided) => (
+                        <>
+                          <TableRow provided={provided} e={e} />
+                          {provided.placeholder} {/* Helyfoglaló hozzáadása */}
+                        </>
+                      )}
+                    </Draggable>
+                  );
+              })}
+            </tbody>
+          </Table>
+        )}
+      </Droppable>
+    </DragDropContext>
+  );
+};
 
-        console.log( 'Sending items:', reorderedItems.map( ( item, index ) => ( {
-            nav_id: item.nav_id,
-            role_id: item.role_id,
-            sorszam: index + 1, // Az új sorszám
-        } ) ) );
-
-        try {
-            // A sorrendet frissítjük az adatbázisban is
-            const response = await myAxios.post( "/update-nav", {
-                items: reorderedItems.map( ( item, index ) => ( {
-                    nav_id: item.nav_id, // Nav ID biztosítása
-                    role_id: item.role_id, // Role ID biztosítása
-                    sorszam: index + 1, // Az új sorszám
-                } ) ),
-            } );
-
-            // Itt frissítheted az items állapotot a válaszból, ha szükséges
-            setItems( response.data ); // Példa arra, hogy a válaszban lévő adatokat újra beállítjuk
-        } catch ( error ) {
-            console.error( "Error updating order:", error );
-        }
-    };
-
-    /*
-    const onDragEnd = async ( result ) => {
-        const { destination, source } = result;
-
-        // Ha a cél pozíció érvényes, átrendezzük a sorokat
-        if ( !destination ) return;
-
-        const reorderedItems = Array.from( items );
-        const [ removed ] = reorderedItems.splice( source.index, 1 ); // Kivesszük a forrást
-        reorderedItems.splice( destination.index, 0, removed ); // Beszúrjuk a célt
-
-        // Frissítjük a state-et
-        setItems( reorderedItems );
-
-        // A sorrendet frissítjük az adatbázisban is
-        // A sorrendet frissítjük az adatbázisban is
-        try {
-            const response = await myAxios.post( "/update-nav", {
-                items: reorderedItems.map( ( item, index ) => ( {
-                    nav_id: item.nav_id, // itt biztosítani kell, hogy a nav_id is szerepel
-                    role_id: item.role_id, // és role_id is benne legyen
-                    sorszam: index + 1 // Az új sorszám
-                } ) ),
-            } );
-
-            // Itt frissítheted az items állapotot a válaszból, ha szükséges
-            setItems( response.data ); // Példa arra, hogy a válaszban lévő adatokat újra beállítjuk
-        } catch ( error ) {
-            console.error( "Error updating order:", error );
-        }
-    };
-*/
-    return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="droppable">
-                {( provided ) => (
-                    <Table className='table' striped bordered hover {...provided.droppableProps} ref={provided.innerRef}>
-                        <thead>
-                            <tr>
-                                <th colSpan={2}>{props.nev}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                items.map( ( e, i ) => {
-                                    if ( e.role_name === props.nev )
-                                        return (
-                                            <Draggable key={e.id} draggableId={String( i )} index={i}>
-                                                {( provided ) => (
-                                                    <tr
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                    >
-                                                        <td>{e.sorszam}</td>
-                                                        <td>{e.nav_name}</td>
-                                                    </tr>
-                                                )}
-                                            </Draggable>
-                                        )
-                                } )
-                            }
-                        </tbody>
-                    </Table>
-                )}
-            </Droppable>
-        </DragDropContext>
-    )
-}
-
-
-export default Tables
+export default Tables;

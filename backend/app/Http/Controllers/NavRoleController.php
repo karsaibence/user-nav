@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateNavRoleRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NavRoleController extends Controller
 {
@@ -38,10 +39,7 @@ class NavRoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, NavRole $navRole)
-    {
-        
-    }
+    public function update(Request $request, NavRole $navRole) {}
 
     /**
      * Remove the specified resource from storage.
@@ -55,7 +53,7 @@ class NavRoleController extends Controller
     {
         // Ellenőrizzük, hogy van-e bejelentkezett felhasználó
         $roleId = Auth::check() ? Auth::user()->role_id : 4; // Ha nincs bejelentkezett felhasználó, akkor vendég szerepkör (role_id = 4)
-        
+
         // Lekérjük a menüpontokat a megadott szerepkörhöz
         $navItems = DB::table('nav_roles')
             ->join('navs', 'navs.id', '=', 'nav_roles.nav_id')
@@ -68,54 +66,49 @@ class NavRoleController extends Controller
     }
 
     public function getNavItemsWithRoles()
-{
-    // Ellenőrizzük, hogy van-e bejelentkezett felhasználó
-    $roleId = Auth::check() ? Auth::user()->role_id : 4; // Ha nincs bejelentkezett felhasználó, akkor vendég szerepkör (role_id = 4)
-    
-    // Lekérjük a menüpontokat és szerepköröket az adatbázisból, a megfelelő kapcsolatokat kezelve
-    $navItems = DB::table('nav_roles')
-        ->join('navs', 'navs.id', '=', 'nav_roles.nav_id')
-        ->join('roles', 'roles.id', '=', 'nav_roles.role_id')
-        ->where('nav_roles.role_id', $roleId)
-        ->orderBy('nav_roles.sorszam')
-        ->select('roles.megnevezes as role_name', 'navs.megnevezes as nav_name', 'navs.id as nav_id', 'roles.id as role_id', 'nav_roles.sorszam')
-        ->get();
+    {
+        // Ellenőrizzük, hogy van-e bejelentkezett felhasználó
+        // Lekérjük a menüpontokat és szerepköröket az adatbázisból, a megfelelő kapcsolatokat kezelve
+        $navItems = DB::table('nav_roles')
+            ->join('navs', 'navs.id', '=', 'nav_roles.nav_id')
+            ->join('roles', 'roles.id', '=', 'nav_roles.role_id')
+            ->orderBy('nav_roles.sorszam')
+            ->select('nav_roles.id', 'roles.megnevezes as role_name', 'navs.megnevezes as nav_name', 'navs.id as nav_id', 'roles.id as role_id', 'nav_roles.sorszam')
+            ->get();
 
-    return response()->json($navItems)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
-}
+        return response()->json($navItems)->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
 
     public function updateNavOrder(Request $request)
-{
-    DB::beginTransaction();
+    {
+        // Kezdjük el a tranzakciót
+        DB::beginTransaction();
 
-    try {
-        $items = $request->input('items'); // Az új sorrend
+        try {
+            $items = $request->input('items');
+            if (!$items) {
+                return response()->json(['error' => 'No items provided'], 400);
+            }
 
-        // 1. Először frissítjük a sorszámokat, hogy ne legyenek ütközések.
-        foreach ($items as $item) {
-            // 1. Frissítjük a kívánt elem sorszámát
-            DB::table('nav_roles')
-                ->where('role_id', $item['role_id'])
-                ->where('nav_id', $item['nav_id'])
-                ->update(['sorszam' => $item['sorszam']]);
+            // 1. Módosítsuk a sorszámokat, és frissítsük az adatokat
+            foreach ($items as $index => $item) {
+                if (!isset($item['id']) || !isset($item['sorszam'])) {
+                    return response()->json(['error' => 'Missing "id" or "sorszam" key in item'], 400);
+                }
+
+                // A sorszám újra kiadása, hogy a helyes sorrendben legyenek
+                DB::table('nav_roles')
+                    ->where('id', $item['id'])
+                    ->update(['sorszam' => $index + 1]); // Az index alapján módosítjuk a sorszámot
+            }
+
+            // Ha minden rendben van, akkor commit-áljuk a tranzakciót
+            DB::commit();
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            // Hiba esetén visszavonjuk a tranzakciót
+            DB::rollBack();
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
-
-        // 2. Eltoljuk a többi rekord sorszámát, amelyek az új pozíciótól nagyobbak.
-        foreach ($items as $item) {
-            DB::table('nav_roles')
-                ->where('role_id', $item['role_id'])
-                ->where('sorszam', '>=', $item['sorszam'])
-                ->increment('sorszam', 1); // Növeljük az összes sorszámot, amely nagyobb vagy egyenlő a kívánt sorszámmal
-        }
-
-        DB::commit();
-        return response()->json(['message' => 'Sorrend sikeresen frissítve!']);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['error' => $e->getMessage()], 500);
     }
-}
-
-
-
 }

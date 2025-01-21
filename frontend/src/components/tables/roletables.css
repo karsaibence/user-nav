@@ -1,0 +1,29 @@
+.role-tables {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 50vh;
+  gap: 2rem;
+}
+
+.table {
+  height: fit-content;
+}
+.menu-management {
+  display: flex;
+  flex-direction: row;
+  margin: 2rem;
+  gap: 6rem;
+}
+
+.menu-management th {
+  text-align: center;
+}
+
+.menu-management-nav-list {
+  width: 50vh;
+  
+}
+
+.menu-management-nav-list td{
+  text-align: center;
+}

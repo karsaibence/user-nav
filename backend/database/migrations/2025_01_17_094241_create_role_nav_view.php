@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-         DB::statement("
+        DB::statement("
             CREATE VIEW role_nav_view AS
             SELECT
                 r.megnevezes AS role_name,
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('role_nav_view');
+        DB::statement('DROP VIEW IF EXISTS role_nav_view');
     }
 };

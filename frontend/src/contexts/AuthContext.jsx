@@ -1,30 +1,41 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { myAxios } from "../api/Axios";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ( { children } ) => {
+export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const [ user, setUser ] = useState( null );
-  const [ navigation, setNavigation ] = useState( [] );
-  const [ navsByRole, setNavsByRole ] = useState( [] );
-  const [ navRoleInfo, setNavRoleInfo ] = useState( [] );
-  const [ role, setRole ] = useState( [] );
-  const [ errors, setErrors ] = useState( {
+  const [user, setUser] = useState(null);
+  const [navs, setNavs] = useState([]);
+  const [navigation, setNavigation] = useState([]);
+  const [navsByRole, setNavsByRole] = useState([]);
+  const [navRoleInfo, setNavRoleInfo] = useState([]);
+  const [role, setRole] = useState([]);
+  const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
     password_confirmation: "",
-  } );
+  });
 
-  const csrf = () => myAxios.get( "/sanctum/csrf-cookie" );
+  const csrf = () => myAxios.get("/sanctum/csrf-cookie");
 
   //bejelentkezett felhasználó adatainak lekérdezése
   const getUser = async () => {
-    const { data } = await myAxios.get( "/user" );
-    console.log( data );
-    setUser( data );
+    const { data } = await myAxios.get("/user");
+    console.log(data);
+    setUser(data);
+    localStorage.setItem("user", JSON.stringify(data));
+  };
+
+  const fetchNavigation = async () => {
+    try {
+      const navData = await myAxios.get("/nav-items");
+      setNavigation(navData.data); // A navigációs adatok beállítása
+    } catch (error) {
+      console.error("Hiba a navigációs adatok lekérésekor:", error);
+    }
   };
 
   const logout = async () => {
@@ -32,97 +43,97 @@ export const AuthProvider = ( { children } ) => {
       await csrf(); // CSRF cookie lekérése
 
       // Kijelentkezés az API-ból
-      await myAxios.post( "/logout" );
-
+      await myAxios.post("/logout");
+      localStorage.removeItem("user");
       // Felhasználó törlése és navigációs lista frissítése
-      setUser( null );
-      setNavigation( [] );
-      navigate( "/" );
+      setUser(null);
+      setNavigation([]);
+      fetchData();
+      navigate("/");
       // Navigációs adat frissítése
-    } catch ( error ) {
-      console.error( "Logout error:", error );
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
 
-  const getNavItemsWithRoles = async () => {
-
-    try {
-      const { data } = await myAxios.get( "/get-nav-items-with-roles" ); // Az új végpont, amely a felhasználó szerepe alapján adja vissza a menüpontokat
-      setNavRoleInfo( data ); // Az adatokat beállítjuk a navigation állapotba
-    } catch ( error ) {
-      console.error( "Failed to fetch navigation items", error );
-    }
-  };
-
-
-  const getNavItems = async () => {
-
-    try {
-      const { data } = await myAxios.get( "/nav-items" ); // Az új végpont, amely a felhasználó szerepe alapján adja vissza a menüpontokat
-      setNavigation( data ); // Az adatokat beállítjuk a navigation állapotba
-    } catch ( error ) {
-      console.error( "Failed to fetch navigation items", error );
-    }
-  };
-
-  const loginReg = async ( { ...adat }, vegpont ) => {
+  const loginReg = async ({ ...adat }, vegpont) => {
     //lekérjük a csrf tokent
     await csrf();
-    console.log( adat, vegpont );
+    console.log(adat, vegpont);
 
     try {
-      await myAxios.post( vegpont, adat );
-      console.log( "siker" );
+      await myAxios.post(vegpont, adat);
+      console.log("siker");
       //sikeres bejelentkezés/regisztráció esetén
       //Lekérdezzük a usert
-      //await getUser();
+      await getUser();
       //elmegyünk  a kezdőlapra
-      getUser();
-      getNavItems();
-      navigate( "/" );
-    } catch ( error ) {
-      console.log( error );
-      if ( error.response.status === 422 ) {
-        setErrors( error.response.data.errors );
+
+      await fetchData();
+    } catch (error) {
+      console.log(error);
+      if (error.response.status === 422) {
+        setErrors(error.response.data.errors);
       }
     }
+    navigate("/");
   };
 
-  const getNavsByRole = async () => {
+  const fetchData = async () => {
     try {
-      const { data } = await myAxios.get( '/get-roles-nav' );
-      setNavsByRole( data );
-    } catch ( error ) {
-      console.log( error )
+      // Navigációs adatok lekérése, ha a felhasználó bejelentkezett
+
+      if (user && user.role !== null) {
+        const navRoleData = await myAxios.get("/get-nav-items-with-roles");
+        setNavRoleInfo(navRoleData.data);
+
+        const roleData = await myAxios.get("/roles");
+        setRole(roleData.data);
+
+        const navsData = await myAxios.get("/navs");
+        setNavs(navsData.data);
+
+        const navRoleDataByRole = await myAxios.get("/get-roles-nav");
+        setNavsByRole(navRoleDataByRole.data);
+      }
+    } catch (error) {
+      console.error("Hiba az adatok lekérésekor:", error);
     }
   };
 
-  const getRoles = async () => {
-    try {
-      const { data } = await myAxios.get( '/roles' );
-      setRole( data );
-    } catch ( error ) {
-      console.log( error )
+  useEffect(() => {
+    // Ellenőrizzük, hogy van-e mentett felhasználó
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    } else {
+      getUser(); // Ha nincs mentett felhasználó, kérjük le
     }
-  };
+  }, []); // Csak egyszer fut le, amikor az oldal betöltődik
+
+  useEffect(() => {
+    fetchNavigation();
+    if (user) {
+      fetchData(); // Ha a felhasználó be van jelentkezve, töltse le az adatokat
+    }
+  }, [user]); // Csak akkor fut le, ha a user változik
 
   return (
     <AuthContext.Provider
       value={{
         logout,
         loginReg,
-        errors,
+        fetchData,
         getUser,
+        errors,
         user,
-        getNavItems,
         navigation,
         navsByRole,
-        getNavsByRole,
-        getRoles,
         navRoleInfo,
         role,
+        navs,
         setNavRoleInfo,
-        getNavItemsWithRoles,
       }}
     >
       {children}
@@ -130,5 +141,5 @@ export const AuthProvider = ( { children } ) => {
   );
 };
 export default function useAuthContext() {
-  return useContext( AuthContext );
+  return useContext(AuthContext);
 }

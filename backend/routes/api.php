@@ -29,8 +29,9 @@ Route::middleware(['auth:sanctum', AdminRole::class])
         //Route::get('/admin/users', [UserController::class, 'index']);
         Route::get('/get-roles-nav',[role_nav_viewController::class,'index']);
         Route::get('/roles',[RoleController::class,'index']);
-        Route::post('/update-nav', [NavRoleController::class, 'updateNavOrder']);
+        Route::put('/update-nav', [NavRoleController::class, 'updateNavOrder']);
         Route::get('/get-nav-items-with-roles', [NavRoleController::class, 'getNavItemsWithRoles']);
+        Route::get('/navs',[NavController::class, 'index']);
     });
 
 Route::middleware(['auth:sanctum', OrvosRole::class])

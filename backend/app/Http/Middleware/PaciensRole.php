@@ -16,7 +16,7 @@ class PaciensRole
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !(Auth::user()->role < 4)) {
+        if (!Auth::check() || !(Auth::user()->role < 3)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         return $next($request); //folytatódhat a kérés

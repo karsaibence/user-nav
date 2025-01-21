@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('nav_roles', function (Blueprint $table) {
             $table->id();
-            $table->integer('sorszam')->unique();
+            $table->integer('sorszam');
             $table->integer('parent')->nullable();
             $table->foreignId('role_id')->references('id')->on('roles');
             $table->foreignId('nav_id')->references('id')->on('navs');

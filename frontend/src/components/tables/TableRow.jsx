@@ -6,7 +6,6 @@ const TableRow = (props) => {
       {...props.provided.draggableProps}
       {...props.provided.dragHandleProps}
     >
-      <td>{props.e.sorszam}</td>
       <td>{props.e.nav_name}</td>
     </tr>
   );

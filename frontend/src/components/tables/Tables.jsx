@@ -54,7 +54,7 @@ const Tables = (props) => {
           >
             <thead>
               <tr>
-                <th colSpan={2}>{props.nev}</th>
+                <th>{props.nev}</th>
               </tr>
             </thead>
             <tbody>
@@ -64,7 +64,7 @@ const Tables = (props) => {
                     <Draggable key={e.id} draggableId={String(e.id)} index={i}>
                       {(provided) => (
                         <>
-                          <TableRow provided={provided} e={e} />
+                          <TableRow provided={provided} e={e}/>
                           {provided.placeholder} {/* Helyfoglaló hozzáadása */}
                         </>
                       )}

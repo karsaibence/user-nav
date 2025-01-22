@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       // Felhasználó törlése és navigációs lista frissítése
       setUser(null);
       setNavigation([]);
-      fetchData();
+      fetchNavigation();
       navigate("/");
       // Navigációs adat frissítése
     } catch (error) {
@@ -68,8 +68,6 @@ export const AuthProvider = ({ children }) => {
       //Lekérdezzük a usert
       await getUser();
       //elmegyünk  a kezdőlapra
-
-      await fetchData();
     } catch (error) {
       console.log(error);
       if (error.response.status === 422) {
@@ -79,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     navigate("/");
   };
 
-  const fetchData = async () => {
+  const fetchAdminData = async () => {
     try {
       // Navigációs adatok lekérése, ha a felhasználó bejelentkezett
 
@@ -115,7 +113,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     fetchNavigation();
     if (user) {
-      fetchData(); // Ha a felhasználó be van jelentkezve, töltse le az adatokat
+      if (user.role_id === 1) {
+        fetchAdminData();
+      } // Ha a felhasználó be van jelentkezve, töltse le az adatokat
     }
   }, [user]); // Csak akkor fut le, ha a user változik
 
@@ -124,7 +124,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         logout,
         loginReg,
-        fetchData,
+        fetchAdminData,
         getUser,
         errors,
         user,

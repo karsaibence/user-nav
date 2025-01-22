@@ -39,7 +39,6 @@ const Tables = (props) => {
     }
   };
 
-  console.log(items);
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="droppable">
@@ -65,7 +64,7 @@ const Tables = (props) => {
                       {(provided) => (
                         <>
                           <TableRow provided={provided} e={e}/>
-                          {provided.placeholder} {/* Helyfoglaló hozzáadása */}
+                          {provided.placeholder}
                         </>
                       )}
                     </Draggable>

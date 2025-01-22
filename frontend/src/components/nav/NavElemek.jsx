@@ -16,7 +16,6 @@ const NavElemek = () => {
     });
   };
 
-  console.log(role);
   return (
     <div className="menu-management">
       <div className="role-tables">
@@ -42,7 +41,7 @@ const NavElemek = () => {
           <tbody>
             {navs.map((e, i) => {
               return (
-                <tr>
+                <tr key={i}>
                   <td>{e.megnevezes}</td>
                 </tr>
               );

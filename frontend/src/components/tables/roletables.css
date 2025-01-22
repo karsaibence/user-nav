@@ -10,6 +10,9 @@
 .table{
   height: max-content;
 }
+.table td{
+  text-align: center;
+}
 .menu-management {
   display: flex;
   flex-direction: row;

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\NavRole;
 use App\Http\Requests\StoreNavRoleRequest;
 use App\Http\Requests\UpdateNavRoleRequest;
+use App\Models\Nav;
+use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class NavRoleController extends Controller
 {
@@ -48,6 +51,64 @@ class NavRoleController extends Controller
     {
         //
     }
+
+    public function checkNavAssignedToRole(Request $request)
+    {
+        $validated = $request->validate([
+            'nav_id' => 'required|integer|exists:navs,id',  // Validáció, hogy a nav_id létezzen a navs táblában
+            'role_name' => 'required|string',  // Validáljuk a role_name-t
+        ]);
+
+        // A role_id-t a role_name alapján
+        $role = Role::where('megnevezes', $validated['role_name'])->first();
+
+        // Ha nem találjuk a szerepkört
+        if (!$role) {
+            return response()->json(['error' => 'Role not found.'], 404);
+        }
+
+        // Ellenőrizzük, hogy a nav_id és role_id páros már létezik
+        $exists = NavRole::where('nav_id', $validated['nav_id'])
+            ->where('role_id', $role->id)
+            ->exists();
+
+        // Visszaadjuk az eredményt
+        return response()->json(['exists' => $exists]);
+    }
+
+    public function addNavToRole(Request $request)
+    {
+        // Validáljuk a bemeneti adatokat
+        $validated = $request->validate([
+            'nav_id' => 'required|integer|exists:navs,id',  // Validáció, hogy a nav_id létezzen a navs táblában
+            'role_name' => 'required|string',  // Validáljuk a role_name-t
+        ]);
+
+        // A role_name alapján megszerezzük a role_id-t
+        $role = Role::where('megnevezes', $validated['role_name'])->first();
+
+        // Ha nem találunk ilyen role-t, hibát jelezünk
+        if (!$role) {
+            return response()->json(['error' => 'Role not found.'], 404);
+        }
+
+        // Ha a role_id megvan, akkor folytatjuk az adatbázis műveleteket
+        $navRole = new NavRole();
+        $navRole->nav_id = $validated['nav_id'];
+        $navRole->role_id = $role->id;  // A role_id hozzárendelése a role_name alapján
+        $navRole->parent = null;  // Beállítjuk a parent mezőt (ha szükséges, itt kezelhetjük)
+
+        // A legmagasabb sorszám +1 beállítása
+        $maxSorszam = NavRole::where('role_id', $role->id)->max('sorszam');
+        $navRole->sorszam = $maxSorszam + 1;
+
+        // Mentjük az új NavRole rekordot
+        $navRole->save();
+
+        return response()->json($navRole);
+    }
+
+
 
     public function getNavItemsByRole()
     {

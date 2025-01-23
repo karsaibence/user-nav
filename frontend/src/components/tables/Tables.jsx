@@ -1,34 +1,32 @@
 import { Table } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { myAxios } from "../../api/Axios";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import TableRow from "./TableRow";
-import "./roletables.css"
+import "./roletables.css";
+import { myAxios } from "../../api/Axios";
 
 const Tables = (props) => {
-  const [items, setItems] = useState(props.lista); // Kezdetben üres tömb
+  const [items, setItems] = useState(props.lista);
 
   useEffect(() => {
-    setItems(props.lista); // Frissítjük a state-et, amikor a lista változik
+    setItems(props.lista); // Frissítjük a lista tartalmát
   }, [props.lista]);
 
+  // Drag-and-drop eseménykezelő
   const onDragEnd = async (result) => {
     const { destination, source } = result;
 
-    // Ha nincs érvényes cél, ne csinálj semmit
-    if (!destination) return;
+    if (!destination) return; // Ha nincs érvényes cél, nem csinálunk semmit
 
-    const reorderedItems = Array.from(props.lista); // Átrendezzük az elemeket
-    const [removed] = reorderedItems.splice(source.index, 1); // Kivesszük az elemet
-    reorderedItems.splice(destination.index, 0, removed); // Beszúrjuk az új helyre
+    // Átrendezzük az elemeket
+    const reorderedItems = Array.from(props.lista);
+    const [removed] = reorderedItems.splice(source.index, 1);
+    reorderedItems.splice(destination.index, 0, removed);
 
-    // Frissítjük az elemeket a state-ben
     setItems(reorderedItems);
+    props.onUpdateNavOrder(props.nev, reorderedItems); // Az új sorrendet továbbítjuk
 
-    // Az új sorrendet globálisan is frissítjük
-    props.onUpdateNavOrder(props.nev, reorderedItems); // Továbbítjuk a frissített sorrendet a szülőnek
-
-    // Küldjük el az új sorrendet a backendnek
+    // Backend frissítése (ha szükséges)
     try {
       const response = await myAxios.put("/update-nav", {
         items: reorderedItems,
@@ -41,7 +39,7 @@ const Tables = (props) => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="droppable">
+      <Droppable droppableId={props.nev}>
         {(provided) => (
           <Table
             className="table"
@@ -58,17 +56,18 @@ const Tables = (props) => {
             </thead>
             <tbody>
               {items.map((e, i) => {
-                if (e.role_name === props.nev)
+                if (props.nev === e.role_name) {
                   return (
                     <Draggable key={e.id} draggableId={String(e.id)} index={i}>
                       {(provided) => (
                         <>
-                          <TableRow provided={provided} e={e}/>
+                          <TableRow provided={provided} e={e} />
                           {provided.placeholder}
                         </>
                       )}
                     </Draggable>
                   );
+                }
               })}
             </tbody>
           </Table>

@@ -77,6 +77,22 @@ export const AuthProvider = ({ children }) => {
     navigate("/");
   };
 
+  const fetchAdminNavItems = async () => {
+    try {
+      const response = await myAxios.get("/get-nav-items-with-roles"); // Backend hívás
+      if (response.data && Array.isArray(response.data)) {
+        console.log("NavRoleInfo válasz:", response.data); // Debugging
+        return response.data;
+      } else {
+        console.error("Unexpected response format:", response);
+        return [];
+      }
+    } catch (error) {
+      console.error("Hiba a navRoleInfo lekérésekor:", error);
+      return [];
+    }
+  };
+
   const fetchAdminData = async () => {
     try {
       // Navigációs adatok lekérése, ha a felhasználó bejelentkezett
@@ -125,6 +141,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         loginReg,
         fetchAdminData,
+        fetchAdminNavItems,
         getUser,
         errors,
         user,

@@ -47,9 +47,21 @@ class NavRoleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(NavRole $navRole)
+    public function destroy($id)
     {
-        //
+        // Keresés a NavRole táblában az id alapján
+        $navRole = NavRole::find($id);
+
+        // Ha nem található, 404-es hiba
+        if (!$navRole) {
+            return response()->json(['message' => 'NavRole not found'], 404);
+        }
+
+        // Törlés
+        $navRole->delete();
+
+        // Válasz visszaküldése
+        return response()->json(['message' => 'NavRole deleted successfully'], 200);
     }
 
     public function checkNavAssignedToRole(Request $request)

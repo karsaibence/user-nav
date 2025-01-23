@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum', AdminRole::class])
         Route::get('/navs', [NavController::class, 'index']);
         Route::post('/add-nav-to-role', [NavRoleController::class, 'addNavToRole']);
         Route::post('/check-nav-assigned-to-role', [NavRoleController::class, 'checkNavAssignedToRole']);
+        Route::delete('/remove-nav-from-role/{id}', [NavRoleController::class, 'destroy']);
     });
 
 Route::middleware(['auth:sanctum', OrvosRole::class])

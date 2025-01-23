@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from "react";
-import Tables from "../tables/Tables";
-import useAuthContext from "../../contexts/AuthContext";
+import Tables from "../tables/Tables"; // Táblázatok kezelése
+import useAuthContext from "../../contexts/AuthContext"; // AuthContext
 import { Table } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { myAxios } from "../../api/Axios"; // Backend kommunikációhoz
 
 const NavElemek = () => {
-  const { role, navRoleInfo, navs } = useAuthContext();
-
+  const { role, navRoleInfo, navs, fetchAdminData } = useAuthContext();
   const [globalItems, setGlobalItems] = useState({});
 
-  // A navRoleInfo adatok szűrése és feltöltése a globalItems-ba
+  // Frissítjük a globalItems állapotot a szerepkörökhöz tartozó menüpontokkal
   useEffect(() => {
     const itemsByRole = role.reduce((acc, e) => {
-      // Az adott role-hoz tartozó navRoleInfo szűrése
       const filteredNavItems = navRoleInfo.filter(
         (item) => item.role_name === e.megnevezes
       );
@@ -21,11 +19,15 @@ const NavElemek = () => {
       return acc;
     }, {});
 
-    setGlobalItems(itemsByRole);
+    setGlobalItems((prevItems) => ({
+      ...prevItems,
+      ...itemsByRole,
+    }));
   }, [role, navRoleInfo]);
 
-  const handleMoveMenuItem = async (menuItem, roleName) => {
-    // Ellenőrizzük, hogy a menuItem tartalmazza a szükséges adatokat
+  // Menüpontok hozzáadása vagy eltávolítása a szerepkörökhöz
+  // Menüpontok hozzáadása vagy eltávolítása a szerepkörökhöz
+  const handleMoveMenuItem = async (menuItem, roleName, isAdding, id) => {
     if (
       !menuItem ||
       !menuItem.id ||
@@ -37,74 +39,123 @@ const NavElemek = () => {
       return;
     }
 
-    // Biztosítjuk, hogy a menuItem tartalmazza a nav_id-t
-    const updatedMenuItem = {
-      ...menuItem,
-      nav_id: menuItem.id, // A nav_id-t a menuItem id-jéből hozzuk létre
-    };
+    const updatedMenuItem = { ...menuItem, nav_id: menuItem.id };
 
-    console.log("Menu item before moving:", updatedMenuItem); // Kiíratjuk a menuItem-t, hogy lássuk az adatokat
-
-    // Először ellenőrizzük, hogy a menüpont már hozzá van-e rendelve a szerepkörhöz
     try {
-      const checkResponse = await myAxios.post("/check-nav-assigned-to-role", {
-        nav_id: updatedMenuItem.nav_id,
-        role_name: roleName,
+      // Ha hozzáadjuk a menüpontot a szerepkörhöz
+      if (isAdding) {
+        const checkResponse = await myAxios.post(
+          "/check-nav-assigned-to-role",
+          {
+            nav_id: updatedMenuItem.nav_id,
+            role_name: roleName,
+          }
+        );
+
+        // Ha már létezik a menüpont, ne csináljunk semmit
+        if (checkResponse.data.exists) return;
+
+        // Hozzáadjuk a menüpontot a szerepkörhöz
+        await myAxios.post("/add-nav-to-role", {
+          nav_id: updatedMenuItem.nav_id,
+          role_name: roleName,
+        });
+      } else {
+        // Ha eltávolítjuk a menüpontot a szerepkörből
+        try {
+          const response = await myAxios.delete(`/remove-nav-from-role/${id}`); // Itt az id-t használjuk
+          console.log("Sikeres törlés");
+        } catch (error) {
+          console.log("sikertelen törlés: ", error);
+        }
+      }
+
+      // UI frissítése
+      setGlobalItems((prevItems) => {
+        const updatedGlobalItems = { ...prevItems };
+        const roleItems = updatedGlobalItems[roleName] || [];
+
+        if (isAdding) {
+          roleItems.push(updatedMenuItem); // Hozzáadjuk a menüpontot
+        } else {
+          const index = roleItems.findIndex(
+            (item) => item.id === updatedMenuItem.id
+          );
+          if (index > -1) roleItems.splice(index, 1); // Eltávolítjuk a menüpontot
+        }
+
+        updatedGlobalItems[roleName] = roleItems;
+        return updatedGlobalItems;
       });
 
-      if (checkResponse.data.exists) {
-        console.log("This menu item is already assigned to the role.");
-        return; // Ha már létezik a kapcsolat, nem végezzük el a mentést
-      }
+      await fetchAdminData(); // Backend adatfrissítés
     } catch (error) {
-      console.error("Error checking if menu item is assigned:", error);
-      return;
-    }
-
-    // Az állapot frissítése a globalItems-ban
-    setGlobalItems((prevItems) => {
-      const updatedGlobalItems = { ...prevItems };
-
-      if (!updatedGlobalItems[roleName]) {
-        updatedGlobalItems[roleName] = [];
-      }
-
-      updatedGlobalItems[roleName].push(updatedMenuItem);
-
-      return updatedGlobalItems;
-    });
-
-    // Backend frissítése
-    try {
-      const response = await myAxios.post("/add-nav-to-role", {
-        nav_id: updatedMenuItem.nav_id, // nav_id
-        role_name: roleName, // role_name
-      });
-      console.log("Menu item added to role:", response.data);
-    } catch (error) {
-      console.error("Error adding menu item to role:", error);
+      console.error("Error handling menu item:", error);
     }
   };
 
-  const onDragEnd = (result) => {
+  // Drag-and-drop eseménykezelő
+  const onDragEnd = async (result) => {
     const { destination, source } = result;
 
-    if (!destination) return; // Ha nincs érvényes cél, nem csinálunk semmit
+    // Ha nincs érvényes célpont, nem csinálunk semmit
+    if (!destination) return;
 
-    // Ellenőrizzük, hogy létezik-e az index a navs tömbben
-    const menuItem = navs[source.index];
+    const sourceRoleName = source.droppableId; // A forrás szerepkör (droppableId)
+    const destinationRoleName = destination.droppableId; // A cél szerepkör (droppableId)
 
-    // Ha nincs, akkor hibát jelezünk és kilépünk
-    if (!menuItem) {
-      console.error("Menu item not found at index:", source.index);
+    const menuItem = navs[source.index]; // A menüpont, amit áthúztak
+    if (!menuItem) return;
+
+    console.log("Source role:", sourceRoleName);
+    console.log("Destination role:", destinationRoleName);
+
+    // Ha a destination a "menuList", akkor azt jelenti, hogy vissza akarjuk helyezni a menüt a "menuList"-be
+    if (destinationRoleName === "menuList") {
+      console.log("Moving menuItem back to menuList");
+      handleMoveMenuItem(menuItem, sourceRoleName, false, result.draggableId); // Eltávolítjuk a szerepkörhöz tartozó táblázatból
+    } else if (sourceRoleName === "menuList") {
+      // Ha a source a "menuList", akkor hozzáadjuk a menüt a megfelelő szerepkörhöz
+      console.log("Moving menuItem to role:", destinationRoleName);
+      handleMoveMenuItem(menuItem, destinationRoleName, true); // Hozzáadjuk a megfelelő szerepkörhöz
+    } else if (
+      !globalItems[sourceRoleName] ||
+      !globalItems[destinationRoleName]
+    ) {
+      // Ellenőrizzük, hogy léteznek-e a megfelelő szerepkörök a globalItems-ben
+      console.error(
+        `Invalid droppableId: ${sourceRoleName} or ${destinationRoleName}`
+      );
       return;
-    }
+    } else {
+      // Átrendezzük a menüpontokat az új sorrend szerint
+      console.log("Moving menuItem within role:", sourceRoleName);
+      const reorderedItems = Array.from(globalItems[sourceRoleName] || []); // Használj [] alapértelmezett értéket
+      const [removed] = reorderedItems.splice(source.index, 1); // Eltávolítjuk a menüpontot
+      reorderedItems.splice(destination.index, 0, removed); // Beszúrjuk az új helyre
 
-    console.log("Menu item:", menuItem); // Ekkor már biztosan nem undefined!
+      // Az új sorrend frissítése a frontenden
+      setGlobalItems((prevItems) => {
+        const updatedGlobalItems = { ...prevItems };
+        updatedGlobalItems[sourceRoleName] = reorderedItems;
+        return updatedGlobalItems;
+      });
 
-    // Ha a menüpontot egy role táblázatba mozgatták, áthelyezzük
-    if (destination.droppableId !== "menuList") {
-      handleMoveMenuItem(menuItem, destination.droppableId);
+      // Az új sorrend elküldése a backend felé
+      try {
+        const updatedMenuItems = reorderedItems.map((item, index) => ({
+          id: item.id, // Az id kulcsot megtartjuk
+          sorszam: index + 1, // A sorszamot az index alapján frissítjük (1-től kezdődik)
+        }));
+
+        const response = await myAxios.put("/update-nav", {
+          role_name: sourceRoleName,
+          items: updatedMenuItems, // Az új sorrend ID és sorszam kulcsokkal
+        });
+        console.log("Sorrend frissítve:", response.data);
+      } catch (error) {
+        console.error("Hiba a sorrend frissítése közben:", error);
+      }
     }
   };
 
@@ -145,6 +196,7 @@ const NavElemek = () => {
                 hover
                 {...provided.droppableProps}
                 ref={provided.innerRef}
+                style={{ minHeight: "300px" }}
               >
                 <thead>
                   <tr>
@@ -153,7 +205,11 @@ const NavElemek = () => {
                 </thead>
                 <tbody>
                   {navs.map((e, i) => (
-                    <Draggable key={e.id} draggableId={String(e.id)} index={i}>
+                    <Draggable
+                      key={e.id}
+                      draggableId={`menu-${e.id}`}
+                      index={i}
+                    >
                       {(provided) => (
                         <>
                           <tr

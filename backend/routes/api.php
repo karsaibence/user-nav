@@ -6,6 +6,7 @@ use App\Http\Controllers\NavController;
 use App\Http\Controllers\NavRoleController;
 use App\Http\Controllers\role_nav_viewController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use App\Http\Middleware\AdminRole;
 use App\Http\Middleware\LoadNavigation;
 use App\Http\Middleware\OrvosRole;
@@ -35,6 +36,8 @@ Route::middleware(['auth:sanctum', AdminRole::class])
         Route::post('/add-nav-to-role', [NavRoleController::class, 'addNavToRole']);
         Route::post('/check-nav-assigned-to-role', [NavRoleController::class, 'checkNavAssignedToRole']);
         Route::delete('/remove-nav-from-role/{id}', [NavRoleController::class, 'destroy']);
+        Route::get('/users', [UserController::class, 'getUsersAndRoles']);
+        Route::put('/update-user-role/{id}', [UserController::class, 'userRoleUpdate']);
     });
 
 Route::middleware(['auth:sanctum', OrvosRole::class])

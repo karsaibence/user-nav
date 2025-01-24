@@ -16,7 +16,8 @@ function App() {
     <Routes>
       <Route path="/" element={<VendegLayout />}>
         <Route index element={<Fooldal />} />
-        {navigation.map((e, index) => {
+        {
+          navigation.map( ( e, index ) => {
           const Component = ComponentsMap[e.componentName]; // Komponens referenciájának lekérése
 
           if (!Component) {
@@ -31,7 +32,8 @@ function App() {
               element={<Component />} // Komponens JSX-ben történő renderelése
             />
           );
-        })}
+          } )
+        }
       </Route>
     </Routes>
   );

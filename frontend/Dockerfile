@@ -1,20 +1,15 @@
-# React Dockerfile
-FROM node:19
+FROM node:18-alpine AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy frontend files
-COPY . /app
-
-# Install frontend dependencies
+COPY package*.json ./
 RUN npm install -force
 
-# Build React app
+COPY . .
 RUN npm run build
 
-# Expose React app port
-EXPOSE 3000
-
-# Start React app
-CMD ["npm", "start"]
+# FROM nginx:stable-alpine as prod
+# COPY --from=build /app/build /usr/share/nginx/html
+# COPY ./default.conf /etc/nginx/conf.d/default.conf
+# EXPOSE 80
+# CMD [ "nginx", "-g", "daemon off;" ]

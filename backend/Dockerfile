@@ -1,25 +1,31 @@
-# Laravel Dockerfile
+# Alap PHP 8.2 image használata
 FROM php:8.2-fpm
+WORKDIR /var/www/html
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \   
+    libxml2-dev \
+    zip \
+    unzip
 
-# Laravel dependencies
-RUN apt-get update && apt-get install -y libpng-dev libjpeg-dev libfreetype6-dev zip git && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install gd pdo pdo_mysql
 
-# Install Composer (PHP package manager)
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Set working directory
-WORKDIR /var/www
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
-# Copy Laravel files
-COPY . /var/www
+# Dockerfile-ban PHP-FPM konfiguráció módosítása
 
-# Install Laravel dependencies
+
+RUN curl -o /usr/local/bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh \
+    && chmod +x /usr/local/bin/wait-for-it.sh
+RUN ls -l /usr/local/bin/wait-for-it.sh
+
+COPY . /var/www/html
 RUN composer install
 
-# Expose port
+CMD /usr/local/bin/wait-for-it.sh db:3306 -- php artisan migrate:fresh --seed --force && php artisan serve --host=0.0.0.0 --port=8000
+# CMD php artisan serve --host=0.0.0.0 --port=8000
 EXPOSE 8000
 
-# Start PHP-FPM server
-CMD ["php-fpm"]

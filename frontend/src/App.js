@@ -9,15 +9,15 @@ function App() {
   const { navigation } = useAuthContext(); // getNavItems lekérése az AuthContextből
 
   const urls = [];
-  navigation.forEach((e) => {
-    urls.push(e.url.replace("/", ""));
-  });
+    navigation.forEach((e) => {
+      urls.push(e.url.replace("/", ""));
+    });
+  
   return (
     <Routes>
       <Route path="/" element={<VendegLayout />}>
         <Route index element={<Fooldal />} />
-        {
-          navigation.map( ( e, index ) => {
+        {navigation.map((e, index) => {
           const Component = ComponentsMap[e.componentName]; // Komponens referenciájának lekérése
 
           if (!Component) {
@@ -32,8 +32,7 @@ function App() {
               element={<Component />} // Komponens JSX-ben történő renderelése
             />
           );
-          } )
-        }
+        })}
       </Route>
     </Routes>
   );

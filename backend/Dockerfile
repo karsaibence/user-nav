@@ -20,12 +20,12 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
 
 RUN curl -o /usr/local/bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh \
     && chmod +x /usr/local/bin/wait-for-it.sh
-RUN ls -l /usr/local/bin/wait-for-it.sh
+
 
 COPY . /var/www/html
 RUN composer install
 
-CMD /usr/local/bin/wait-for-it.sh db:3306 -- php artisan migrate:fresh --seed --force && php artisan serve --host=0.0.0.0 --port=8000
+CMD /usr/local/bin/wait-for-it.sh db:3306 -- php artisan migrate:fresh --seed --force && php-fpm
 # CMD php artisan serve --host=0.0.0.0 --port=8000
-EXPOSE 8000
+EXPOSE 9000
 

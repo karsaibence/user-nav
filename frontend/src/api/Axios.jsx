@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Létrehozzuk az Axios példányt
 export const myAxios = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "http://localhost/api",
   withCredentials: true,
 });
 

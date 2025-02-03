@@ -7,6 +7,7 @@ services:
       - ./backend:/var/www/html
       - /var/www/html/storage
       - /var/www/html/bootstrap/cache
+      - ./php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
     ports:
       - 9000:9000
     depends_on:
@@ -22,6 +23,7 @@ services:
       MYSQL_PASSWORD: root
     volumes:
       - ./data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
     ports:
       - 3306:3306
     networks:

@@ -11,7 +11,7 @@ services:
       - db
     networks:
       - mysql-phpmyadmin
-      
+
   db:
     image: mysql:5.7
     environment:
@@ -66,6 +66,7 @@ services:
 networks:
   mysql-phpmyadmin:
     driver: bridge
+    enable_ipv6: false
   
 volumes:
   db_data:

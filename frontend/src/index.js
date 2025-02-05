@@ -5,13 +5,16 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BrowserRouter } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { AdminProvider } from "./contexts/AdminContext";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <AdminProvider>
+          <App />
+        </AdminProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

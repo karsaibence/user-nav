@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Tables from "../tables/Tables"; // Táblázatok kezelése
-import useAuthContext from "../../contexts/AuthContext"; // AuthContext
 import { Table } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { myAxios } from "../../api/Axios"; // Backend kommunikációhoz
+import useAdminContext from "../../contexts/AdminContext";
 
 const NavElemek = () => {
-  const { role, navRoleInfo, navs, fetchAdminData } = useAuthContext();
+  const { role, navRoleInfo, navs, fetchAdminData } = useAdminContext();
   const [ globalItems, setGlobalItems ] = useState( {} );
 
   // Frissítjük a globalItems állapotot a szerepkörökhöz tartozó menüpontokkal

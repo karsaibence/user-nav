@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       // Felhasználó törlése és navigációs lista frissítése
       setUser(null);
       setNavigation([]);
-      fetchNavigation();
+      //fetchNavigation();
       navigate("/");
       // Navigációs adat frissítése
     } catch (error) {
@@ -79,8 +79,6 @@ export const AuthProvider = ({ children }) => {
 
     if (savedUser) {
       setUser(JSON.parse(savedUser));
-    } else {
-      getUser(); // Ha nincs mentett felhasználó, kérjük le
     }
   }, []); // Csak egyszer fut le, amikor az oldal betöltődik
 
@@ -94,7 +92,8 @@ export const AuthProvider = ({ children }) => {
         user,
         navigation,
         fetchNavigation,
-      }}>
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

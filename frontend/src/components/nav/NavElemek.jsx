@@ -6,7 +6,7 @@ import { myAxios } from "../../api/Axios"; // Backend kommunikációhoz
 import useAdminContext from "../../contexts/AdminContext";
 
 const NavElemek = () => {
-  const { role, navRoleInfo, navs, fetchAdminData } = useAdminContext();
+  const { role, navRoleInfo, navs, fetchNavRoleInfo } = useAdminContext();
   const [ globalItems, setGlobalItems ] = useState( {} );
 
   // Frissítjük a globalItems állapotot a szerepkörökhöz tartozó menüpontokkal
@@ -77,7 +77,7 @@ const NavElemek = () => {
         return updatedGlobalItems;
       } );
 
-      await fetchAdminData(); // Backend adatfrissítés
+      await fetchNavRoleInfo(); // Backend adatfrissítés
     } catch ( error ) {
       console.error( "Error handling menu item:", error );
     }

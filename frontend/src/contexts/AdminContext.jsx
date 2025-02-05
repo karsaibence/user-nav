@@ -6,27 +6,11 @@ const AdminContext = createContext();
 
 export const AdminProvider = ({ children }) => {
   const { user, fetchNavigation } = useAuthContext();
-  
+
   const [role, setRole] = useState([]);
   const [users, setUsers] = useState([]);
   const [navs, setNavs] = useState([]);
   const [navRoleInfo, setNavRoleInfo] = useState([]);
-
-  const fetchAdminNavItems = async () => {
-    try {
-      const response = await myAxios.get("/get-nav-items-with-roles"); // Backend hívás
-      if (response.data && Array.isArray(response.data)) {
-        console.log("NavRoleInfo válasz:", response.data); // Debugging
-        return response.data;
-      } else {
-        console.error("Unexpected response format:", response);
-        return [];
-      }
-    } catch (error) {
-      console.error("Hiba a navRoleInfo lekérésekor:", error);
-      return [];
-    }
-  };
 
   const getUsers = async () => {
     const { data } = await myAxios.get("/users");
@@ -34,24 +18,22 @@ export const AdminProvider = ({ children }) => {
     setUsers(data);
   };
 
+  const fetchNavRoleInfo = async () => {
+    const navRoleData = await myAxios.get("/get-nav-items-with-roles");
+    setNavRoleInfo(navRoleData.data);
+  };
+
   const fetchAdminData = async () => {
     try {
-      // Navigációs adatok lekérése, ha a felhasználó bejelentkezett
+      const roleData = await myAxios.get("/roles");
+      setRole(roleData.data);
 
-      if (user && user.role !== null) {
-        const navRoleData = await myAxios.get("/get-nav-items-with-roles");
-        setNavRoleInfo(navRoleData.data);
+      const navsData = await myAxios.get("/navs");
+      setNavs(navsData.data);
 
-        const roleData = await myAxios.get("/roles");
-        setRole(roleData.data);
+      getUsers();
 
-        const navsData = await myAxios.get("/navs");
-        setNavs(navsData.data);
-
-        getUsers();
-        //const navRoleDataByRole = await myAxios.get("/get-roles-nav");
-        //setNavsByRole(navRoleDataByRole.data);
-      }
+      fetchNavRoleInfo();
     } catch (error) {
       console.error("Hiba az adatok lekérésekor:", error);
     }
@@ -59,25 +41,23 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     fetchNavigation();
-    if (user) {
-      if (user.role_id === 1) {
-        fetchAdminData();
-      } // Ha a felhasználó be van jelentkezve, töltse le az adatokat
-    }
+    if (user && user.role_id === 1) {
+      fetchAdminData();
+    } // Ha a felhasználó be van jelentkezve, töltse le az adatokat
   }, [user]); // Csak akkor fut le, ha a user változik
 
   return (
     <AdminContext.Provider
       value={{
-        fetchAdminData,
-        fetchAdminNavItems,
+        fetchNavRoleInfo,
         role,
         navs,
         users,
         navRoleInfo,
         setNavRoleInfo,
         getUsers,
-      }}>
+      }}
+    >
       {children}
     </AdminContext.Provider>
   );

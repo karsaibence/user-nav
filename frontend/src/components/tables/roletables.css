@@ -12,6 +12,8 @@
 }
 .table td{
   text-align: center;
+  height: 50px;
+  width: 300px;
 }
 .menu-management {
   display: flex;

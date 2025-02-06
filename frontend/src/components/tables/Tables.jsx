@@ -32,12 +32,10 @@ const Tables = (props) => {
               if (props.nev === e.role_name) {
                 // Ha a szerepkör neve egyezik a menüpontok nevével
                 return (
-                  <Draggable key={e.id} draggableId={String(e.id)} index={i}>
+                  <Draggable key={e.id} draggableId={String(e.id)} index={i} >
                     {(provided) => (
                       <>
                         <TableRow provided={provided} e={e} />
-                        {provided.placeholder}{" "}
-                        {/* Placeholder biztosítja a drag helyét */}
                       </>
                     )}
                   </Draggable>
@@ -45,6 +43,7 @@ const Tables = (props) => {
               }
               return null;
             })}
+            {provided.placeholder}
           </tbody>
         </Table>
       )}

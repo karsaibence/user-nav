@@ -4,7 +4,7 @@ import { Table } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { myAxios } from "../../api/Axios"; // Backend kommunikációhoz
 import useAdminContext from "../../contexts/AdminContext";
-import "./dragndrop.css";
+
 
 const NavElemek = () => {
   const { role, navRoleInfo, navs, fetchNavRoleInfo } = useAdminContext();
@@ -179,7 +179,6 @@ const NavElemek = () => {
           <Droppable droppableId="menuList">
             {(provided) => (
               <Table
-                className="table"
                 striped
                 bordered
                 hover
@@ -204,17 +203,16 @@ const NavElemek = () => {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            style={{
-                              ...provided.draggableProps.style, // Alap stílusok, amelyeket a drag-and-drop rendszer ad
-                              height: "50px",
-                              width: "300px",
-                              padding: "fit-parent",
-                              cursor: snapshot.isDragging ? "grabbing" : "grab", // Különböző kurzor húzás közben
-                              zIndex: snapshot.isDragging ? 1000 : 1, // Ha húzod, a legelső elem legyen
-                              boxShadow: snapshot.isDragging
-                                ? "0 4px 8px rgba(0, 0, 0, 0.2)"
-                                : "none", // Árnyék a húzott elem körül
-                            }}
+                            // style={{
+                            //   ...provided.draggableProps.style, // Alap stílusok, amelyeket a drag-and-drop rendszer ad
+                            //   width: "310px",
+                            //   padding: "fit-parent",
+                            //   cursor: snapshot.isDragging ? "grabbing" : "grab", // Különböző kurzor húzás közben
+                            //   zIndex: snapshot.isDragging ? 1000 : 1, // Ha húzod, a legelső elem legyen
+                            //   boxShadow: snapshot.isDragging
+                            //     ? "0 4px 8px rgba(0, 0, 0, 0.2)"
+                            //     : "none", // Árnyék a húzott elem körül
+                            // }}
                           >
                             <td>{e.megnevezes}</td>
                           </tr>

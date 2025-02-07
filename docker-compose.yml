@@ -7,7 +7,7 @@ services:
       - ./backend:/var/www/html
       - /var/www/html/storage
       - /var/www/html/bootstrap/cache
-      - ./php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./backend/php-fpm/www.conf:/usr/local/etc/php-fpm.d/www.conf
     ports:
       - 9000:9000
     depends_on:

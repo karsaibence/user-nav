@@ -7,14 +7,31 @@
   box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
   border-radius: 7px;
 }
-.table{
-  height: max-content;
+
+.role-tables td{
+  width: 210px;
 }
-.table td{
+/*
+.table_roles{
+height: max-content;
+}
+
+.table_roles td {
   text-align: center;
-  height: 50px;
-  width: 300px;
+  height: 40px;
+  min-width: 275px;
 }
+
+.table {
+  height: max-content;
+  width: 50px;
+}
+.table td {
+  text-align: center;
+  height: 40px;
+  width: 100px;
+}
+  */
 .menu-management {
   display: flex;
   flex-direction: row;
@@ -22,11 +39,12 @@
   gap: 6rem;
   width: 70vw;
   margin-inline: auto;
-}
-
-.menu-management th {
   text-align: center;
 }
+/*
+.menu-management th {
+  text-align: center;
+} */
 
 .menu-management-nav-list {
   width: 50vh;
@@ -36,5 +54,5 @@
 }
 
 .menu-management-nav-list td {
-  text-align: center;
-}
+  width: 1000px;
+} 

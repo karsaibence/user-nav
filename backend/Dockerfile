@@ -46,4 +46,4 @@ RUN composer install
 EXPOSE 9000
 
 # Alkalmazás elindítása
-CMD /usr/local/bin/wait-for-it.sh db:3306 -- php artisan migrate:fresh --seed --force && php-fpm
+CMD /usr/local/bin/wait-for-it.sh db:3306 -- php artisan migrate:fresh --seed --force; php-fpm
